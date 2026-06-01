@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info:
+  title: AeroLink API
+  version: 1.0.0
+  description: AeroLink Airline distributed microservices API
+
+servers:
+  - url: http://localhost:5000
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@aerolink.com
+                password:
+                  type: string
+                  example: Password123
+                role:
+                  type: string
+                  example: Passenger
+      responses:
+        '201':
+          description: Registered successfully
+        '400':
+          description: Missing fields
+        '409':
+          description: User already exists
+
+  /api/auth/login:
+    post:
+      summary: Login and get token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@aerolink.com
+                password:
+                  type: string
+                  example: Password123
+      responses:
+        '200':
+          description: Returns JWT token
+        '401':
+          description: Wrong credentials
+
+  /api/flights:
+    get:
+      summary: Get all flights
+      tags: [Flights]
+      responses:
+        '200':
+          description: List of flights
+
+  /api/flights/{id}:
+    get:
+      summary: Get one flight
+      tags: [Flights]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: AL-101
+      responses:
+        '200':
+          description: Flight details
+        '404':
+          description: Not found
+
+  /api/bookings:
+    get:
+      summary: Get all bookings
+      tags: [Bookings]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of bookings
+        '401':
+          description: No token
+    post:
+      summary: Create a booking
+      tags: [Bookings]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flightId:
+                  type: string
+                  example: AL-101
+      responses:
+        '201':
+          description: Booking confirmed
+        '400':
+          description: Flight full or missing fields
+        '401':
+          description: No token
+        '404':
+          description: Flight not found
+
+  /api/baggage/scan:
+    post:
+      summary: Record a baggage scan
+      tags: [Baggage]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bookingId:
+                  type: string
+                  example: BK-123456
+                location:
+                  type: string
+                  example: Check-in Counter
+                status:
+                  type: string
+                  example: Checked In
+      responses:
+        '201':
+          description: Scan recorded
+        '400':
+          description: Missing fields
+
+  /api/baggage/{bookingId}:
+    get:
+      summary: Track baggage for a booking
+      tags: [Baggage]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: BK-123456
+      responses:
+        '200':
+          description: Baggage records
+        '404':
+          description: No records found

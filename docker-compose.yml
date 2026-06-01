@@ -1,0 +1,83 @@
+version: '3.8'
+
+networks:
+  edge-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+
+services:
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "5001:5001"
+    networks:
+      - backend-network
+    environment:
+      - PORT=5001
+      - AWS_ACCESS_KEY_ID=AKIASHRWST6UGEYPFQ7Y
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_REGION=us-east-1
+    restart: unless-stopped
+
+  flight-service:
+    build: ./flight-service
+    ports:
+      - "5002:5002"
+    networks:
+      - backend-network
+    environment:
+      - PORT=5002
+      - AWS_ACCESS_KEY_ID=AKIASHRWST6UGEYPFQ7Y
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_REGION=us-east-1
+    restart: unless-stopped
+
+  booking-service:
+    build: ./booking-service
+    ports:
+      - "5003:5003"
+    networks:
+      - backend-network
+    environment:
+      - PORT=5003
+      - FLIGHT_SERVICE_URL=http://flight-service:5002
+      - AWS_ACCESS_KEY_ID=AKIASHRWST6UGEYPFQ7Y
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_REGION=us-east-1
+    depends_on:
+      - flight-service
+    restart: unless-stopped
+
+  baggage-service:
+    build: ./baggage-service
+    ports:
+      - "5004:5004"
+    networks:
+      - backend-network
+    environment:
+      - PORT=5004
+      - AWS_ACCESS_KEY_ID=AKIASHRWST6UGEYPFQ7Y
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_REGION=us-east-1
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "5000:5000"
+    networks:
+      - edge-network
+      - backend-network
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - FLIGHT_SERVICE_URL=http://flight-service:5002
+      - BOOKING_SERVICE_URL=http://booking-service:5003
+      - BAGGAGE_SERVICE_URL=http://baggage-service:5004
+    depends_on:
+      - auth-service
+      - flight-service
+      - booking-service
+      - baggage-service
+    restart: unless-stopped
