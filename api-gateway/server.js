@@ -96,7 +96,7 @@ const authenticate = async (req, res, next) => {
     }
     const token = authHeader.split(' ')[1];
     try {
-        const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/verify`, {
+        const response = await fetch(`${AUTH_SERVICE_URL}/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token })
@@ -127,11 +127,11 @@ const requireRole = (allowedRoles) => {
     };
 };
 
-// Proxies with Preserved Paths and Telemetry Integration
+// Proxies with Clean Path Routing and Telemetry Integration
 app.use('/api/auth', createProxyMiddleware({
     target: AUTH_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: (path, req) => { return '/api/auth' + path; }
+    pathRewrite: { '^/api/auth': '' } // Keep this! Auth service expects raw endpoints based on your setup
 }));
 
 app.use('/api/flights', (req, res, next) => {
@@ -142,14 +142,14 @@ app.use('/api/flights', (req, res, next) => {
     return requireRole(['Admin'])(req, res, next);
 }, createProxyMiddleware({
     target: FLIGHT_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: (path, req) => { return '/api/flights' + path; }
+    changeOrigin: true
+    // pathRewrite REMOVED - Let /api/flights pass completely to flight-service
 }));
 
 app.use('/api/bookings', authenticate, createProxyMiddleware({
     target: BOOKING_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: (path, req) => { return '/api/bookings' + path; },
+    // pathRewrite REMOVED - Let /api/bookings pass completely to booking-service
     on: {
         proxyReq: (proxyReq, req) => {
             if (req.user) {
@@ -162,8 +162,8 @@ app.use('/api/bookings', authenticate, createProxyMiddleware({
 
 app.use('/api/baggage', authenticate, createProxyMiddleware({
     target: BAGGAGE_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: (path, req) => { return '/api/baggage' + path; }
+    changeOrigin: true
+    // pathRewrite REMOVED - Let /api/baggage pass completely to baggage-service
 }));
 
 app.get('/health', (req, res) => {
