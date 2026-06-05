@@ -131,7 +131,7 @@ const requireRole = (allowedRoles) => {
 app.use('/api/auth', createProxyMiddleware({
     target: AUTH_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/api/auth': '' } // Keep this! Auth service expects raw endpoints based on your setup
+    pathRewrite: { '^/api/auth': '' } 
 }));
 
 app.use('/api/flights', (req, res, next) => {
@@ -143,7 +143,7 @@ app.use('/api/flights', (req, res, next) => {
 }, createProxyMiddleware({
     target: FLIGHT_SERVICE_URL,
     changeOrigin: true
-    // pathRewrite REMOVED - Let /api/flights pass completely to flight-service
+    
 }));
 
 app.use('/api/bookings', authenticate, createProxyMiddleware({
@@ -163,7 +163,7 @@ app.use('/api/bookings', authenticate, createProxyMiddleware({
 app.use('/api/baggage', authenticate, createProxyMiddleware({
     target: BAGGAGE_SERVICE_URL,
     changeOrigin: true
-    // pathRewrite REMOVED - Let /api/baggage pass completely to baggage-service
+    
 }));
 
 app.get('/health', (req, res) => {
