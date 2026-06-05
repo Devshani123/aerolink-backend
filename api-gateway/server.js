@@ -149,7 +149,7 @@ app.use('/api/flights', (req, res, next) => {
 app.use('/api/bookings', authenticate, createProxyMiddleware({
     target: BOOKING_SERVICE_URL,
     changeOrigin: true,
-    // pathRewrite REMOVED - Let /api/bookings pass completely to booking-service
+    
     on: {
         proxyReq: (proxyReq, req) => {
             if (req.user) {
